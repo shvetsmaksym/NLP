@@ -17,7 +17,8 @@ if __name__ == "__main__":
     # filepath10 = os.path.join(DOC_EXAMPLES_DIR, 'dykdand7.txt')
     # filepath11 = os.path.join(DOC_EXAMPLES_DIR, 'solaris.txt')
 
-    normalized_docs = process_documents(folder_path=os.path.join(DOC_EXAMPLES_DIR, 'folder_with_docs'))
+    normalized_docs = process_documents(doc1_path=os.path.join(DOC_EXAMPLES_DIR, 'dykdand1.txt'),
+                                        doc2_path=os.path.join(DOC_EXAMPLES_DIR, 'dykdand2.txt'))
     calculate_tf_idf(normalized_docs)
 
     print('DONE.')

@@ -33,7 +33,9 @@ def process_documents(**kwargs):
         norm_doc1_words, bow = get_bag_of_words(kwargs['doc1_path'], mode='text_file')
         norm_doc2_words, bow_ = get_bag_of_words(kwargs['doc2_path'], mode='text_file')
 
-        bow.update(bow_)
+        bow = set(bow)
+        bow.update(set(bow_))
+
         if bow:
             update_dictionary(bow=bow)
 

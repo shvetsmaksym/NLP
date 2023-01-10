@@ -48,7 +48,6 @@ def get_bag_of_words(filepath, mode='text_file'):
     except FileNotFoundError:
         known_words = set()
 
-    normalized_text = ''
     if mode == 'text_file':
         normalized_text = initial_normalization(filepath=filepath)
         split_words = normalized_text.split()
