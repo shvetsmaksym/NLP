@@ -6,7 +6,7 @@ import pandas as pd
 
 from Constants import DICTIONARY, ENCODING, RESULTS_FOLDER
 from DocumentProcessing.dictionary_manipulations import update_dictionary
-from DocumentProcessing.initial_processor import get_bag_of_words
+from DocumentProcessing.initial_processor import get_bag_of_words, clear_dir
 
 
 def update_words_with_matches(words: list):
@@ -99,6 +99,7 @@ def calculate_tf_idf(normalized_docs):
             df_cos_similarities.loc[doc2_loc, doc1_loc] = cos_smlrt
             df_cos_similarities.loc[doc1_loc, doc2_loc] = cos_smlrt
 
+    clear_dir(RESULTS_FOLDER)
     df_cos_similarities.to_csv(os.path.join(RESULTS_FOLDER, 'DocumentCosSimilarities.csv'), sep=';')
 
 
