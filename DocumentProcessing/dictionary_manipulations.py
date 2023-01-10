@@ -1,9 +1,15 @@
 import json
+import os
+
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 
-from Constants import LEVENSHTEIN_CLOSENESS, DICTIONARY, LEVENSHTEIN_PAIRS, CSV_SEP
-from levenshtein_dist import calculate_lev_closeness, create_lev_csl_csv
+from Constants import LEVENSHTEIN_CLOSENESS, DICTIONARY, LEVENSHTEIN_PAIRS, CSV_SEP, LEV_CL_SPLIT_FILES, HEADER_CSV, \
+    ENCODING
+# from Levenshtein.levenshtein_processes import create_lev_csl_csv_multiprocess
+from Levenshtein.levenshtein_metrics import levenshtein_closeness_iterative, create_lev_csl_csv
+from Levenshtein.levenshtein_processes import create_lev_csl_csv_multiprocess
 from logger import timer_func
 
 
@@ -11,7 +17,7 @@ from logger import timer_func
 def update_metadata_with_given_pairs(metadata: dict, df: pd.DataFrame) -> dict:
     """Note: this is the only method where metadata["Groups"] used.
     The reason is that it really matters whether w1, w2 are among keys or in any group's list."""
-    for row in df.iterrows():
+    for row in tqdm(df.iterrows(), desc='Updating dictionary with close words...'):
         w1, w2 = row[1][0], row[1][1]
         w_ = {w1, w2}
 
@@ -34,12 +40,12 @@ def update_metadata_with_given_pairs(metadata: dict, df: pd.DataFrame) -> dict:
         elif w1 in metadata["KnownWords"]:
 
             if w1 in metadata["Groups"].keys():
-                metadata["Groups"][w1] = [w2]
+                metadata["Groups"][w1].append(w2)
                 metadata['Matches'][w2] = w1
             else:
                 for key, group_words in metadata["Groups"].items():
                     if w1 in group_words:
-                        lev_closeness = calculate_lev_closeness(key, w2)
+                        lev_closeness = levenshtein_closeness_iterative(key, w2)
                         if lev_closeness > LEVENSHTEIN_CLOSENESS:
                             group_words.append(w2)
                             metadata['Matches'][w2] = w1
@@ -52,20 +58,19 @@ def update_metadata_with_given_pairs(metadata: dict, df: pd.DataFrame) -> dict:
         elif w2 in metadata["KnownWords"]:
 
             if w2 in metadata["Groups"].keys():
-                metadata["Groups"][w2] = [w1]
+                metadata["Groups"][w2].append(w1)
                 metadata['Matches'][w1] = w2
-            for key, group_words in metadata["Groups"].items():
-                if w2 in group_words:
-                    lev_closeness = calculate_lev_closeness(key, w2)
-                    if lev_closeness > LEVENSHTEIN_CLOSENESS:
-                        group_words.append(w1)
-                        metadata['Matches'][w1] = w2
-                    else:
-                        metadata["Groups"][w1] = [w1]
-                        metadata['Matches'][w1] = w1
-                    break
-
-            metadata['Matches'][w1] = w2
+            else:
+                for key, group_words in metadata["Groups"].items():
+                    if w2 in group_words:
+                        lev_closeness = levenshtein_closeness_iterative(key, w2)
+                        if lev_closeness > LEVENSHTEIN_CLOSENESS:
+                            group_words.append(w1)
+                            metadata['Matches'][w1] = w2
+                        else:
+                            metadata["Groups"][w1] = [w1]
+                            metadata['Matches'][w1] = w1
+                        break
 
         metadata["KnownWords"].update(w_)
 
@@ -75,7 +80,7 @@ def update_metadata_with_given_pairs(metadata: dict, df: pd.DataFrame) -> dict:
 @timer_func
 def update_metadata_with_single_words(metadata: dict, words_left) -> dict:
     """These are 'levenshteinelly far' words."""
-    for w in words_left:
+    for w in tqdm(words_left, desc='Updating dictionary with left words'):
         if w not in metadata["KnownWords"]:
             metadata["Groups"][w] = [w]
             metadata["Matches"][w] = w
@@ -86,7 +91,7 @@ def update_metadata_with_single_words(metadata: dict, words_left) -> dict:
 
 def update_dictionary(bow):
     try:
-        with open(DICTIONARY, 'r') as f:
+        with open(DICTIONARY, 'r', encoding=ENCODING) as f:
             metadata = json.load(f)
             metadata["KnownWords"] = set(metadata["KnownWords"])
 
@@ -97,7 +102,14 @@ def update_dictionary(bow):
     create_lev_csl_csv(bow, known_words=metadata['KnownWords'])
 
     # Load levenshtein pairs
-    df = pd.read_csv(LEVENSHTEIN_PAIRS, sep=CSV_SEP, encoding='cp1250')
+    if os.path.exists(LEV_CL_SPLIT_FILES):
+        df = pd.DataFrame(columns=HEADER_CSV)
+        files = os.listdir(LEV_CL_SPLIT_FILES)
+        for file in files:
+            df_ = pd.read_csv(os.path.join(LEV_CL_SPLIT_FILES, file), sep=CSV_SEP, encoding=ENCODING)
+            df = pd.concat([df, df_], keys=HEADER_CSV)
+    else:
+        df = pd.read_csv(LEVENSHTEIN_PAIRS, sep=CSV_SEP, encoding=ENCODING)
 
     df = df.sort_values(by='Levenshtein Closeness', ascending=False)
     df_close_pairs = df[['Word 1', 'Word 2']][(df['Levenshtein Closeness'] > LEVENSHTEIN_CLOSENESS) & (df['Levenshtein Closeness'] < 1)]
@@ -110,8 +122,8 @@ def update_dictionary(bow):
     metadata['KnownWords'] = list(metadata['KnownWords'])
 
     js = json.dumps(metadata, ensure_ascii=False)
-    with open(DICTIONARY, 'w') as file:
+    with open(DICTIONARY, 'w', encoding=ENCODING) as file:
         file.write(js)
 
     # Tests
-    print(set(metadata['KnownWords']) == (set(metadata['Matches'])))
+    # print(set(metadata['KnownWords']) == (set(metadata['Matches'])))

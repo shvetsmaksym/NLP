@@ -3,7 +3,10 @@
 *.log
 *.json
 *.ipynb
+*.pyc
 
 /.ipynb_checkpoints
+
+ __pycache__/
 
 
