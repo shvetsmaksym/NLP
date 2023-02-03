@@ -14,7 +14,7 @@ PROCESSED_DOC2 = os.path.join(TEMP_DIR, 'processed_document_2.txt')
 LEV_PAIRS_BASENAME = 'levenshtein_pairs'
 LEVENSHTEIN_PAIRS = os.path.join(TEMP_DIR, LEV_PAIRS_BASENAME + '.csv')
 LEVENSHTEIN_MATRIX = os.path.join(TEMP_DIR, 'levenshtein_matrix.csv')
-DICTIONARY = 'dictionary_1.json'
+DICTIONARY = 'dictionary_3.json'
 USER_DICTIONARY = os.path.join(TEMP_DIR, 'user_dictionary.json')
 
 CSV_SEP = ';'

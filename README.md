@@ -44,6 +44,15 @@ In order to calculate cosine similarities we have to find:
 * If we compare two documents, we use TF for cosine similarity calculation 
 * If we compare more than two documents, we use TFIDF for cosine similarity calculation
 
+## Run algorithm
+Put text documents, that you want to measure similarities between, into `doc_examples` folder.
+
+Next from main project path run: <br>
+`python main.py -d1 text-doxument-1.txt -d2 text-doxument-2.txt` or <br>
+`python main.py -fp folder-with-text-docs`
+
+After algorithm running is complete, check `DocumentCosSimilarities.csv` in `results` folder.
+
 
 ## TODO: 
 `levenshtein_processes.py` is not efficiently optimized yet.

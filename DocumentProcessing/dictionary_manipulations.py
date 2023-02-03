@@ -7,9 +7,7 @@ from tqdm import tqdm
 
 from Constants import LEVENSHTEIN_CLOSENESS, DICTIONARY, LEVENSHTEIN_PAIRS, CSV_SEP, LEV_CL_SPLIT_FILES, HEADER_CSV, \
     ENCODING
-# from Levenshtein.levenshtein_processes import create_lev_csl_csv_multiprocess
 from Levenshtein.levenshtein_metrics import levenshtein_closeness_iterative, create_lev_csl_csv
-from Levenshtein.levenshtein_processes import create_lev_csl_csv_multiprocess
 from logger import timer_func
 
 
@@ -43,16 +41,14 @@ def update_metadata_with_given_pairs(metadata: dict, df: pd.DataFrame) -> dict:
                 metadata["Groups"][w1].append(w2)
                 metadata['Matches'][w2] = w1
             else:
-                for key, group_words in metadata["Groups"].items():
-                    if w1 in group_words:
-                        lev_closeness = levenshtein_closeness_iterative(key, w2)
-                        if lev_closeness > LEVENSHTEIN_CLOSENESS:
-                            group_words.append(w2)
-                            metadata['Matches'][w2] = w1
-                        else:
-                            metadata["Groups"][w2] = [w2]
-                            metadata['Matches'][w2] = w2
-                        break
+                key = metadata['Matches'][w1]
+                lev_closeness = levenshtein_closeness_iterative(key, w2)
+                if lev_closeness > LEVENSHTEIN_CLOSENESS:
+                    metadata["Groups"][key].append(w2)
+                    metadata['Matches'][w2] = key
+                else:
+                    metadata["Groups"][w2] = [w2]
+                    metadata['Matches'][w2] = w2
 
         # The same as the above elif for w1
         elif w2 in metadata["KnownWords"]:
@@ -61,16 +57,14 @@ def update_metadata_with_given_pairs(metadata: dict, df: pd.DataFrame) -> dict:
                 metadata["Groups"][w2].append(w1)
                 metadata['Matches'][w1] = w2
             else:
-                for key, group_words in metadata["Groups"].items():
-                    if w2 in group_words:
-                        lev_closeness = levenshtein_closeness_iterative(key, w2)
-                        if lev_closeness > LEVENSHTEIN_CLOSENESS:
-                            group_words.append(w1)
-                            metadata['Matches'][w1] = w2
-                        else:
-                            metadata["Groups"][w1] = [w1]
-                            metadata['Matches'][w1] = w1
-                        break
+                key = metadata['Matches'][w2]
+                lev_closeness = levenshtein_closeness_iterative(key, w1)
+                if lev_closeness > LEVENSHTEIN_CLOSENESS:
+                    metadata["Groups"][key].append(w1)
+                    metadata['Matches'][w1] = key
+                else:
+                    metadata["Groups"][w1] = [w1]
+                    metadata['Matches'][w1] = w1
 
         metadata["KnownWords"].update(w_)
 

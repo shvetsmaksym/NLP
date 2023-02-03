@@ -74,7 +74,7 @@ def calculate_tf_idf(normalized_docs):
     docs_names = ['Document_{}'.format(i) for i in range(docs_number)]
     bow = set(sum(normalized_docs, []))
 
-    t_ = [[normalized_docs[i].count(w) for i in range(docs_number)] for w in bow]
+    t_ = [[normalized_docs[i].count(w) for i in range(docs_number)] for w in bow]  # rows: documents; cols: word's occurences
     word_counts = np.array(t_)
     df_word_counts = pd.DataFrame(word_counts, columns=[i for i in range(docs_number)], index=bow)
     df_cos_similarities = pd.DataFrame(np.ones((docs_number, docs_number)), index=docs_names, columns=docs_names)  # used np.ones, because we don't need to calculate similarity of document with itself (values on a main diagonal stay 1)
